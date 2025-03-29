@@ -1,3 +1,10 @@
+<# 
+Author: Thomas Van Aert
+License: CC BY-NC-ND 4.0 (https://creativecommons.org/licenses/by-nc-nd/4.0/)
+Description: [Brief script description]
+Note: You may NOT modify or redistribute this script without my permission.
+#>
+
 $subnet = "192.168.1"
 $poorten = @(22, 80, 443, 3389)
 
