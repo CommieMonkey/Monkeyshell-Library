@@ -22,13 +22,27 @@ function Toon-Menu {
     Write-Host "============================="
 }
 
+function Vraag-Invoer($vraag, $voorbeeld, $validatie) {
+    do {
+        $antwoord = Read-Host "$vraag (Voorbeeld: $voorbeeld)"
+        if ($antwoord -match $validatie) {
+            return $antwoord
+        } else {
+            Write-Host "Ongeldige invoer, probeer opnieuw."
+        }
+    } while ($true)
+}
+
 function Poortscanner {
-    $subnet = "192.168.1"
-    $poorten = @(21, 22, 23, 25, 53, 80, 443, 3389)
+    $subnet = Vraag-Invoer "Geef het subnet (eerste 3 blokken van een IP)" "192.168.1" "^\d{1,3}\.\d{1,3}\.\d{1,3}$"
+    $poorten = Vraag-Invoer "Geef de poorten (gescheiden door komma’s)" "22, 80, 443" "^\d+(,\d+)*$"
+
+    $poortLijst = $poorten -split "," | ForEach-Object { [int]$_ }
     Write-Host "Scannen van poorten..."
+    
     foreach ($i in 1..254) {
         $ip = "$subnet.$i"
-        foreach ($poort in $poorten) {
+        foreach ($poort in $poortLijst) {
             if (Test-NetConnection -ComputerName $ip -Port $poort -InformationLevel Quiet) {
                 Write-Host "Open poort: $ip:$poort"
             }
@@ -37,17 +51,20 @@ function Poortscanner {
 }
 
 function Onbekende-Apparaten {
-    $toegestane_ips = @("192.168.1.1", "192.168.1.2", "192.168.1.10")
+    $subnet = Vraag-Invoer "Geef het subnet" "192.168.1" "^\d{1,3}\.\d{1,3}\.\d{1,3}$"
+    $toegestane_ips = Vraag-Invoer "Geef de bekende IP's (gescheiden door komma’s)" "192.168.1.1, 192.168.1.10" "^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d+(,\s*\d{1,3}\.\d{1,3}\.\d{1,3}\.\d+)*$"
+
+    $toegestaneLijst = $toegestane_ips -split ",\s*" 
     $huidige_apparaten = @()
 
     1..254 | ForEach-Object {
-        $ip = "192.168.1.$_"
+        $ip = "$subnet.$_"
         if (Test-Connection -ComputerName $ip -Count 1 -Quiet) {
             $huidige_apparaten += $ip
         }
     }
 
-    $onbekende_apparaten = $huidige_apparaten | Where-Object { $_ -notin $toegestane_ips }
+    $onbekende_apparaten = $huidige_apparaten | Where-Object { $_ -notin $toegestaneLijst }
     if ($onbekende_apparaten) {
         Write-Host "Onbekende apparaten gedetecteerd:"
         $onbekende_apparaten | ForEach-Object { Write-Host $_ }
@@ -57,22 +74,27 @@ function Onbekende-Apparaten {
 }
 
 function Firewall-Check {
+    Write-Host "Tonen van alle ingeschakelde firewallregels..."
     Get-NetFirewallRule | Where-Object { $_.Enabled -eq "True" } | Select-Object DisplayName, Direction, Action | Format-Table -AutoSize
 }
 
 function Netwerkverbindingen {
+    Write-Host "Actieve netwerkverbindingen tonen..."
     netstat -an | Select-String "ESTABLISHED"
 }
 
 function Mislukte-Inlogpogingen {
-    Get-WinEvent -FilterHashtable @{ LogName='Security'; ID=4625; StartTime=(Get-Date).AddDays(-1) } | Select-Object TimeCreated, Message
+    $dagen = Vraag-Invoer "Hoeveel dagen terug wil je scannen?" "1" "^\d+$"
+    Get-WinEvent -FilterHashtable @{ LogName='Security'; ID=4625; StartTime=(Get-Date).AddDays(-[int]$dagen) } | Select-Object TimeCreated, Message
 }
 
 function Beheerders-Check {
+    Write-Host "Lijst van lokale beheerders tonen..."
     Get-LocalGroupMember -Group "Administrators" | Select-Object Name
 }
 
 function ARP-Spoofing-Detectie {
+    Write-Host "Scannen op ARP-spoofing..."
     $arp_table = arp -a
     $mac_adressen = @{}
 
@@ -81,7 +103,7 @@ function ARP-Spoofing-Detectie {
             $ip = $matches[1]
             $mac = $matches[2]
             if ($mac_adressen[$mac]) {
-                Write-Host "Waarschuwing: Mogelijke ARP-spoofing gedetecteerd! $mac wordt gedeeld door $ip en $mac_adressen[$mac]"
+                Write-Host "⚠️  Mogelijke ARP-spoofing gedetecteerd! $mac wordt gedeeld door $ip en $mac_adressen[$mac]"
             } else {
                 $mac_adressen[$mac] = $ip
             }
@@ -102,7 +124,7 @@ do {
         "6" { Beheerders-Check }
         "7" { ARP-Spoofing-Detectie }
         "0" { Write-Host "Afsluiten..."; exit }
-        default { Write-Host "Ongeldige keuze, probeer opnieuw." }
+        default { Write-Host "❌ Ongeldige keuze, probeer opnieuw." }
     }
 
     Pause
