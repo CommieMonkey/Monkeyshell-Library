@@ -44,7 +44,7 @@ function Poortscanner {
         $ip = "$subnet.$i"
         foreach ($poort in $poortLijst) {
             if (Test-NetConnection -ComputerName $ip -Port $poort -InformationLevel Quiet) {
-                Write-Host "Open poort: $ip:$poort"
+                Write-Host "Open poort: $ip :$poort"
             }
         }
     }
