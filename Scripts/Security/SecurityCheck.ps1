@@ -8,18 +8,18 @@ Note: You may NOT modify or redistribute this script without my permission.
 
 function Toon-Menu {
     Clear-Host
-    Write-Host "============================="
-    Write-Host "   Netwerk Security Check   "
-    Write-Host "============================="
-    Write-Host "1. Poortscanner"
-    Write-Host "2. Onbekende apparaten zoeken"
-    Write-Host "3. Firewall-regels controleren"
-    Write-Host "4. Actieve netwerkverbindingen tonen"
-    Write-Host "5. Mislukte inlogpogingen zoeken"
-    Write-Host "6. Beheerdersaccounts bekijken"
-    Write-Host "7. ARP-spoofing detecteren"
-    Write-Host "0. Afsluiten"
-    Write-Host "============================="
+    Write-Host "|=====================================|"
+    Write-Host "|       Netwerk Security Check        |"
+    Write-Host "|=====================================|"
+    Write-Host "|1. Poortscanner                      |"
+    Write-Host "|2. Onbekende apparaten zoeken        |"
+    Write-Host "|3. Firewall-regels controleren       |"
+    Write-Host "|4. Actieve netwerkverbindingen tonen |"
+    Write-Host "|5. Mislukte inlogpogingen zoeken     |"
+    Write-Host "|6. Beheerdersaccounts bekijken       |"
+    Write-Host "|7. ARP-spoofing detecteren           |"
+    Write-Host "|0. Afsluiten                         |"
+    Write-Host "|=====================================|"
 }
 
 function Vraag-Invoer($vraag, $voorbeeld, $validatie) {
